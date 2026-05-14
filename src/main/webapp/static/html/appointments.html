@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HMS – Appointments</title>
+  <link rel="stylesheet" href="../css/styles.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon">🏥</div><div><span>MediCore HMS</span></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">📊</span>Dashboard</a>
+      <div class="nav-section-label">Management</div>
+      <a class="nav-item" data-page="patients" href="patients.html"><span class="nav-icon">🧑‍⚕️</span>Patients</a>
+      <a class="nav-item" data-page="doctors" href="doctors.html"><span class="nav-icon">👨‍⚕️</span>Doctors</a>
+      <a class="nav-item" data-page="appointments" href="appointments.html"><span class="nav-icon">📅</span>Appointments</a>
+      <a class="nav-item" data-page="billing" href="billing.html"><span class="nav-icon">💳</span>Billing</a>
+      <a class="nav-item" data-page="prescriptions" href="prescriptions.html"><span class="nav-icon">💊</span>Prescriptions</a>
+      <div class="nav-section-label" data-role="ADMIN">System</div>
+      <a class="nav-item" data-page="users" data-role="ADMIN" href="users.html"><span class="nav-icon">👥</span>Users</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar" id="sidebar-avatar">A</div>
+        <div class="user-info"><strong id="sidebar-username">…</strong><span id="sidebar-role">—</span></div>
+        <button class="btn-logout" onclick="logout()">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <span class="topbar-title">Appointment Scheduling</span>
+      <div class="topbar-actions">
+        <select id="filter-status" class="form-control" style="width:auto;padding:7px 12px" onchange="applyFilter()">
+          <option value="">All Status</option>
+          <option value="CONFIRMED">Confirmed</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+        <button class="btn btn-primary" onclick="openBook()">➕ Book Appointment</button>
+      </div>
+    </header>
+
+    <main class="page-content fade-in">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time Slot</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="apts-tbody">
+            <tr><td colspan="7" style="text-align:center;padding:40px"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Book Appointment Modal -->
+<div class="modal-overlay" id="apt-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="apt-modal-title">Book Appointment</h3>
+      <button class="modal-close" onclick="closeModal('apt-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="apt-id"/>
+      <div class="form-group">
+        <label>Patient *</label>
+        <select id="apt-patient" class="form-control"><option value="">Select patient…</option></select>
+      </div>
+      <div class="form-group">
+        <label>Doctor *</label>
+        <select id="apt-doctor" class="form-control"><option value="">Select doctor…</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Appointment Date *</label>
+          <input id="apt-date" class="form-control" type="date"/>
+        </div>
+        <div class="form-group">
+          <label>Time Slot</label>
+          <select id="apt-slot" class="form-control">
+            <option value="09:00-09:30">09:00 – 09:30</option>
+            <option value="09:30-10:00">09:30 – 10:00</option>
+            <option value="10:00-10:30">10:00 – 10:30</option>
+            <option value="10:30-11:00">10:30 – 11:00</option>
+            <option value="11:00-11:30">11:00 – 11:30</option>
+            <option value="11:30-12:00">11:30 – 12:00</option>
+            <option value="14:00-14:30">14:00 – 14:30</option>
+            <option value="14:30-15:00">14:30 – 15:00</option>
+            <option value="15:00-15:30">15:00 – 15:30</option>
+            <option value="15:30-16:00">15:30 – 16:00</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('apt-modal')">Cancel</button>
+      <button class="btn btn-primary" id="apt-save-btn" onclick="saveAppointment()">Book</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/app.js"></script>
+<script>
+let appointments = [];
+
+(async () => {
+  await requireAuth();
+  initSidebar('appointments');
+  // Set min date to today
+  document.getElementById('apt-date').min = new Date().toISOString().split('T')[0];
+  await Promise.all([loadAppointments(), populateDropdowns()]);
+})();
+
+async function loadAppointments() {
+  const res = await API.appointments.getAll();
+  if (!res.success) { toast(res.message, 'error'); return; }
+  appointments = res.data || [];
+  applyFilter();
+}
+
+function applyFilter() {
+  const status = document.getElementById('filter-status').value;
+  const filtered = status ? appointments.filter(a => a.status === status) : appointments;
+  renderTable(filtered);
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('apts-tbody');
+  if (!data.length) { tbody.innerHTML = emptyRow(7, 'No appointments found'); return; }
+  tbody.innerHTML = data.map((a, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${a.patient?.name || '—'}</strong></td>
+      <td>${a.doctor?.name || '—'}<br><span style="font-size:.72rem;color:var(--text-secondary)">${a.doctor?.specialization || ''}</span></td>
+      <td>${fmtDate(a.appointmentDate)}</td>
+      <td><span style="font-size:.82rem">${a.timeSlot || '—'}</span></td>
+      <td>${statusBadge(a.status)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          ${a.status === 'CONFIRMED'
+            ? `<button class="btn btn-warning btn-sm" onclick="cancelApt(${a.appointmentId})">✕ Cancel</button>`
+            : `<span style="font-size:.8rem;color:var(--text-secondary)">Cancelled</span>`}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function populateDropdowns() {
+  const [pts, docs] = await Promise.all([API.patients.getAll(), API.doctors.getAll()]);
+  if (pts.success) {
+    document.getElementById('apt-patient').innerHTML =
+      '<option value="">Select patient…</option>' +
+      (pts.data || []).map(p => `<option value="${p.patientId}">${p.name}</option>`).join('');
+  }
+  if (docs.success) {
+    document.getElementById('apt-doctor').innerHTML =
+      '<option value="">Select doctor…</option>' +
+      (docs.data || []).map(d => `<option value="${d.doctorId}">${d.name} – ${d.specialization || 'General'}</option>`).join('');
+  }
+}
+
+function openBook() {
+  document.getElementById('apt-id').value = '';
+  document.getElementById('apt-modal-title').textContent = 'Book Appointment';
+  document.getElementById('apt-save-btn').textContent = 'Book';
+  openModal('apt-modal');
+}
+
+async function saveAppointment() {
+  const patientId = document.getElementById('apt-patient').value;
+  const doctorId  = document.getElementById('apt-doctor').value;
+  const date      = document.getElementById('apt-date').value;
+  const timeSlot  = document.getElementById('apt-slot').value;
+
+  if (!patientId || !doctorId || !date) { toast('Please fill all required fields', 'error'); return; }
+
+  const btn = document.getElementById('apt-save-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+
+  const res = await API.appointments.schedule({
+    patientId: parseInt(patientId),
+    doctorId:  parseInt(doctorId),
+    appointmentDate: date,
+    timeSlot
+  });
+
+  btn.disabled = false; btn.textContent = 'Book';
+  if (res.success) { toast('Appointment booked!', 'success'); closeModal('apt-modal'); loadAppointments(); }
+  else toast(res.message, 'error');
+}
+
+async function cancelApt(id) {
+  if (!confirm('Cancel this appointment?')) return;
+  const res = await API.appointments.cancel(id);
+  if (res.success) { toast('Appointment cancelled', 'success'); loadAppointments(); }
+  else toast(res.message, 'error');
+}
+</script>
+</body>
+</html>

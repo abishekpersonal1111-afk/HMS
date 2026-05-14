@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HMS – Login</title>
+  <meta name="description" content="Hospital Management System – Secure Login Portal"/>
+  <link rel="stylesheet" href="../css/styles.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="login-bg">
+  <div class="login-card fade-in">
+    <div class="login-logo">
+      <div class="logo-icon">🏥</div>
+      <div class="logo-text">
+        MediCore HMS
+        <small>Hospital Management System</small>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="login-tabs">
+      <div class="login-tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
+      <div class="login-tab" id="tab-register" onclick="switchTab('register')">Register</div>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="login-username">Username</label>
+        <input id="login-username" class="form-control" type="text" placeholder="Enter username" required/>
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <div style="position:relative">
+          <input id="login-password" class="form-control" type="password" placeholder="Enter password" required style="padding-right: 35px;"/>
+          <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; opacity:0.6; user-select:none;" onclick="togglePassword('login-password', this)">👁️</span>
+        </div>
+      </div>
+      <button id="login-btn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" type="submit">
+        Sign In
+      </button>
+      <p style="margin-top:16px;text-align:center;font-size:.8rem">
+        Default admin: <code style="color:var(--accent)">admin / admin123</code>
+      </p>
+    </form>
+
+    <!-- Register Form -->
+    <form id="register-form" style="display:none" onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label for="reg-username">Username</label>
+        <input id="reg-username" class="form-control" type="text" placeholder="Choose a username" required/>
+      </div>
+      <div class="form-group">
+        <label for="reg-password">Password</label>
+        <div style="position:relative">
+          <input id="reg-password" class="form-control" type="password" placeholder="Choose a password" required style="padding-right: 35px;"/>
+          <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; opacity:0.6; user-select:none;" onclick="togglePassword('reg-password', this)">👁️</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="reg-role">Role</label>
+        <select id="reg-role" class="form-control">
+          <option value="PATIENT">Patient</option>
+          <option value="DOCTOR">Doctor</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" type="submit">
+        Create Account
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  // Redirect if already logged in
+  API.auth.me().then(res => {
+    if (res.success) window.location.href = 'dashboard.html';
+  });
+
+  function switchTab(tab) {
+    document.getElementById('login-form').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
+    document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in…';
+    const u = document.getElementById('login-username').value;
+    const p = document.getElementById('login-password').value;
+    const res = await API.auth.login(u, p);
+    if (res.success) {
+      setSession(res.data);
+      toast('Welcome back, ' + res.data.username + '!', 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 600);
+    } else {
+      toast(res.message || 'Login failed', 'error');
+      btn.disabled = false;
+      btn.innerHTML = 'Sign In';
+    }
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    const u = document.getElementById('reg-username').value;
+    const p = document.getElementById('reg-password').value;
+    const r = document.getElementById('reg-role').value;
+    const res = await API.auth.register(u, p, r);
+    if (res.success) {
+      toast('Account created! Please sign in.', 'success');
+      switchTab('login');
+    } else {
+      toast(res.message || 'Registration failed', 'error');
+    }
+  }
+</script>
+</body>
+</html>

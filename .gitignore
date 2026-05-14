@@ -1,0 +1,13 @@
+target/
+*.class
+*.log
+.project
+.classpath
+.settings/
+.factorypath
+.idea/
+*.swp
+*.zip
+*.war
+/C:/tools/
+Test.java
