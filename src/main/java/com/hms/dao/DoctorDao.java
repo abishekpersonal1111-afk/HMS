@@ -39,7 +39,15 @@ public class DoctorDao implements GenericDao<Doctor, Integer> {
     @Override
     public void delete(Integer id) {
         Doctor d = entityManager.find(Doctor.class, id);
-        if (d != null) entityManager.remove(d);
+        if (d != null)
+            entityManager.remove(d);
+    }
+
+    public Optional<Doctor> findByUserId(Integer userId) {
+        return entityManager.createQuery("FROM Doctor WHERE user.userId = :uid", Doctor.class)
+                .setParameter("uid", userId)
+                .getResultStream()
+                .findFirst();
     }
 
     public List<Doctor> findBySpecialization(String spec) {

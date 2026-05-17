@@ -46,19 +46,29 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        // Only ADMINs can access patient management APIs
-        if (uri.contains("/api/patients") && user.getRole() != User.Role.ADMIN) {
+        // Patient and doctor users may access patient data in a limited form, admins
+        // can access all patients
+        if (uri.contains("/api/patients") && !"GET".equals(method) && user.getRole() != User.Role.ADMIN) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"Access denied. Admins only.\"}");
             return false;
         }
 
-        // Only ADMINs can modify billing records
+        // Only ADMINs can modify billing records. Patients may still GET their own
+        // bills.
         if (uri.contains("/api/bills") && !"GET".equals(method) && user.getRole() != User.Role.ADMIN) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"Access denied. Admins only.\"}");
+            return false;
+        }
+
+        if (uri.contains("/api/bills") && "GET".equals(method) && user.getRole() == User.Role.DOCTOR) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json");
+            response.getWriter()
+                    .write("{\"error\":\"Access denied. Bills are only visible to admin or the patient.\"}");
             return false;
         }
 

@@ -1,155 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HMS – Billing</title>
-  <link rel="stylesheet" href="../css/styles.css"/>
+  <link rel="stylesheet" href="../css/styles.css" />
 </head>
+
 <body>
-<div id="toast-container"></div>
-<div class="app-shell">
-  <aside class="sidebar">
-    <div class="sidebar-logo"><div class="logo-icon">🏥</div><div><span>MediCore HMS</span></div></div>
-    <nav class="sidebar-nav">
-      <div class="nav-section-label">Overview</div>
-      <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">📊</span>Dashboard</a>
-      <div class="nav-section-label">Management</div>
-      <a class="nav-item" data-page="patients" href="patients.html"><span class="nav-icon">🧑‍⚕️</span>Patients</a>
-      <a class="nav-item" data-page="doctors" href="doctors.html"><span class="nav-icon">👨‍⚕️</span>Doctors</a>
-      <a class="nav-item" data-page="appointments" href="appointments.html"><span class="nav-icon">📅</span>Appointments</a>
-      <a class="nav-item" data-page="billing" href="billing.html"><span class="nav-icon">💳</span>Billing</a>
-      <a class="nav-item" data-page="prescriptions" href="prescriptions.html"><span class="nav-icon">💊</span>Prescriptions</a>
-      <div class="nav-section-label" data-role="ADMIN">System</div>
-      <a class="nav-item" data-page="users" data-role="ADMIN" href="users.html"><span class="nav-icon">👥</span>Users</a>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="user-pill">
-        <div class="user-avatar" id="sidebar-avatar">A</div>
-        <div class="user-info"><strong id="sidebar-username">…</strong><span id="sidebar-role">—</span></div>
-        <button class="btn-logout" onclick="logout()">⏻</button>
+  <div id="toast-container"></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🏥</div>
+        <div><span>MediCore HMS</span></div>
       </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Overview</div>
+        <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">📊</span>Dashboard</a>
+        <div class="nav-section-label">Management</div>
+        <a class="nav-item" data-page="patients" href="patients.html"><span class="nav-icon">🧑‍⚕️</span>Patients</a>
+        <a class="nav-item" data-page="doctors" href="doctors.html"><span class="nav-icon">👨‍⚕️</span>Doctors</a>
+        <a class="nav-item" data-page="appointments" href="appointments.html"><span
+            class="nav-icon">📅</span>Appointments</a>
+        <a class="nav-item" data-page="billing" href="billing.html"><span class="nav-icon">💳</span>Billing</a>
+        <a class="nav-item" data-page="prescriptions" href="prescriptions.html"><span
+            class="nav-icon">💊</span>Prescriptions</a>
+        <div class="nav-section-label" data-role="ADMIN">System</div>
+        <a class="nav-item" data-page="users" data-role="ADMIN" href="users.html"><span
+            class="nav-icon">👥</span>Users</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-pill">
+          <div class="user-avatar" id="sidebar-avatar">A</div>
+          <div class="user-info"><strong id="sidebar-username">…</strong><span id="sidebar-role">—</span></div>
+          <button class="btn-logout" onclick="logout()">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <span class="topbar-title">Billing & Payments</span>
+        <div class="topbar-actions">
+          <select id="filter-status" class="form-control" style="width:auto;padding:7px 12px" onchange="applyFilter()">
+            <option value="">All Bills</option>
+            <option value="UNPAID">Unpaid</option>
+            <option value="PAID">Paid</option>
+          </select>
+          <button class="btn btn-primary" onclick="openGenerateModal()">➕ Generate Bill</button>
+        </div>
+      </header>
+
+      <main class="page-content fade-in">
+        <!-- Summary stats -->
+        <div class="stat-grid" style="margin-bottom:20px">
+          <div class="stat-card">
+            <div class="stat-icon amber">💳</div>
+            <div>
+              <div class="stat-value" id="total-bills">—</div>
+              <div class="stat-label">Total Bills</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red">⏳</div>
+            <div>
+              <div class="stat-value" id="unpaid-count">—</div>
+              <div class="stat-label">Unpaid</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">✅</div>
+            <div>
+              <div class="stat-value" id="paid-count">—</div>
+              <div class="stat-label">Paid</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple">₹</div>
+            <div>
+              <div class="stat-value" id="total-revenue">—</div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Bill ID</th>
+                <th>Patient</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bills-tbody">
+              <tr>
+                <td colspan="7" style="text-align:center;padding:40px">
+                  <div class="spinner"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
     </div>
-  </aside>
-
-  <div class="main-content">
-    <header class="topbar">
-      <span class="topbar-title">Billing & Payments</span>
-      <div class="topbar-actions">
-        <select id="filter-status" class="form-control" style="width:auto;padding:7px 12px" onchange="applyFilter()">
-          <option value="">All Bills</option>
-          <option value="UNPAID">Unpaid</option>
-          <option value="PAID">Paid</option>
-        </select>
-        <button class="btn btn-primary" onclick="openGenerateModal()">➕ Generate Bill</button>
-      </div>
-    </header>
-
-    <main class="page-content fade-in">
-      <!-- Summary stats -->
-      <div class="stat-grid" style="margin-bottom:20px">
-        <div class="stat-card"><div class="stat-icon amber">💳</div><div><div class="stat-value" id="total-bills">—</div><div class="stat-label">Total Bills</div></div></div>
-        <div class="stat-card"><div class="stat-icon red">⏳</div><div><div class="stat-value" id="unpaid-count">—</div><div class="stat-label">Unpaid</div></div></div>
-        <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-value" id="paid-count">—</div><div class="stat-label">Paid</div></div></div>
-        <div class="stat-card"><div class="stat-icon purple">₹</div><div><div class="stat-value" id="total-revenue">—</div><div class="stat-label">Total Revenue</div></div></div>
-      </div>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr><th>#</th><th>Bill ID</th><th>Patient</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="bills-tbody">
-            <tr><td colspan="7" style="text-align:center;padding:40px"><div class="spinner"></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </main>
   </div>
-</div>
 
-<!-- Generate Bill Modal -->
-<div class="modal-overlay" id="bill-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Generate Bill</h3>
-      <button class="modal-close" onclick="closeModal('bill-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Patient *</label>
-        <select id="bill-patient" class="form-control"><option value="">Select patient…</option></select>
+  <!-- Generate Bill Modal -->
+  <div class="modal-overlay" id="bill-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Generate Bill</h3>
+        <button class="modal-close" onclick="closeModal('bill-modal')">✕</button>
       </div>
-      <div class="form-group">
-        <label>Total Amount (₹) *</label>
-        <input id="bill-amount" class="form-control" type="number" min="0" step="0.01" placeholder="0.00"/>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Patient *</label>
+          <select id="bill-patient" class="form-control">
+            <option value="">Select patient…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Total Amount (₹) *</label>
+          <input id="bill-amount" class="form-control" type="number" min="0" step="0.01" placeholder="0.00" />
+        </div>
+        <div class="form-group">
+          <label>Description / Services</label>
+          <textarea id="bill-desc" class="form-control" placeholder="Consultation, lab tests, medicines…"></textarea>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Description / Services</label>
-        <textarea id="bill-desc" class="form-control" placeholder="Consultation, lab tests, medicines…"></textarea>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('bill-modal')">Cancel</button>
+        <button class="btn btn-primary" id="bill-save-btn" onclick="generateBill()">Generate</button>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('bill-modal')">Cancel</button>
-      <button class="btn btn-primary" id="bill-save-btn" onclick="generateBill()">Generate</button>
     </div>
   </div>
-</div>
 
-<!-- Invoice Preview Modal -->
-<div class="modal-overlay" id="invoice-modal">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <h3>Invoice</h3>
-      <button class="modal-close" onclick="closeModal('invoice-modal')">✕</button>
-    </div>
-    <div class="modal-body" id="invoice-body"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('invoice-modal')">Close</button>
-      <button class="btn btn-success" id="invoice-pay-btn">💳 Mark as Paid</button>
+  <!-- Invoice Preview Modal -->
+  <div class="modal-overlay" id="invoice-modal">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-header">
+        <h3>Invoice</h3>
+        <button class="modal-close" onclick="closeModal('invoice-modal')">✕</button>
+      </div>
+      <div class="modal-body" id="invoice-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('invoice-modal')">Close</button>
+        <button class="btn btn-success" id="invoice-pay-btn">💳 Mark as Paid</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="../js/api.js"></script>
-<script src="../js/app.js"></script>
-<script>
-let bills = [];
+  <script src="../js/api.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    let bills = [];
 
-(async () => {
-  await requireAuth();
-  initSidebar('billing');
-  await Promise.all([loadBills(), populatePatients()]);
-})();
+    (async () => {
+      await requireAuth();
+      initSidebar('billing');
+      await Promise.all([loadBills(), populatePatients()]);
+    })();
 
-async function loadBills() {
-  const res = await API.bills.getAll();
-  if (!res.success) { toast(res.message, 'error'); return; }
-  bills = res.data || [];
-  updateStats();
-  applyFilter();
-}
+    async function loadBills() {
+      const user = getSession();
+      const res = await API.bills.getAll();
+      if (!res.success) { toast(res.message, 'error'); return; }
+      bills = res.data || [];
+      updateStats();
+      applyFilter();
+    }
 
-function updateStats() {
-  const paid   = bills.filter(b => b.paymentStatus === 'PAID');
-  const unpaid = bills.filter(b => b.paymentStatus === 'UNPAID');
-  const revenue = paid.reduce((s, b) => s + parseFloat(b.totalAmount || 0), 0);
-  document.getElementById('total-bills').textContent  = bills.length;
-  document.getElementById('unpaid-count').textContent = unpaid.length;
-  document.getElementById('paid-count').textContent   = paid.length;
-  document.getElementById('total-revenue').textContent = '₹' + revenue.toFixed(0);
-}
+    function updateStats() {
+      const paid = bills.filter(b => b.paymentStatus === 'PAID');
+      const unpaid = bills.filter(b => b.paymentStatus === 'UNPAID');
+      const revenue = paid.reduce((s, b) => s + parseFloat(b.totalAmount || 0), 0);
+      document.getElementById('total-bills').textContent = bills.length;
+      document.getElementById('unpaid-count').textContent = unpaid.length;
+      document.getElementById('paid-count').textContent = paid.length;
+      document.getElementById('total-revenue').textContent = '₹' + revenue.toFixed(0);
+    }
 
-function applyFilter() {
-  const status = document.getElementById('filter-status').value;
-  const filtered = status ? bills.filter(b => b.paymentStatus === status) : bills;
-  renderTable(filtered);
-}
+    function applyFilter() {
+      const status = document.getElementById('filter-status').value;
+      const filtered = status ? bills.filter(b => b.paymentStatus === status) : bills;
+      renderTable(filtered);
+    }
 
-function renderTable(data) {
-  const tbody = document.getElementById('bills-tbody');
-  if (!data.length) { tbody.innerHTML = emptyRow(7, 'No bills found'); return; }
-  tbody.innerHTML = data.map((b, i) => `
+    function renderTable(data) {
+      const tbody = document.getElementById('bills-tbody');
+      if (!data.length) { tbody.innerHTML = emptyRow(7, 'No bills found'); return; }
+      tbody.innerHTML = data.map((b, i) => `
     <tr>
       <td>${i + 1}</td>
       <td><code style="font-size:.8rem;color:var(--accent)">#${b.billId}</code></td>
@@ -161,45 +208,52 @@ function renderTable(data) {
         <div style="display:flex;gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="viewInvoice(${b.billId})">🧾 Invoice</button>
           ${b.paymentStatus === 'UNPAID'
-            ? `<button class="btn btn-success btn-sm" onclick="payBill(${b.billId})">💳 Pay</button>`
-            : ''}
+          ? `<button class="btn btn-success btn-sm" onclick="payBill(${b.billId})">💳 Pay</button>`
+          : ''}
           <button class="btn btn-danger btn-sm" onclick="deleteBill(${b.billId})">🗑</button>
         </div>
       </td>
     </tr>`).join('');
-}
+    }
 
-async function populatePatients() {
-  const res = await API.patients.getAll();
-  if (res.success) {
-    document.getElementById('bill-patient').innerHTML =
-      '<option value="">Select patient…</option>' +
-      (res.data || []).map(p => `<option value="${p.patientId}">${p.name}</option>`).join('');
-  }
-}
+    async function populatePatients() {
+      const user = getSession();
+      // Only show patient dropdown for admins; patients see themselves
+      if (user.role === 'ADMIN') {
+        const res = await API.patients.getAll();
+        if (res.success) {
+          document.getElementById('bill-patient').innerHTML =
+            '<option value="">Select patient…</option>' +
+            (res.data || []).map(p => `<option value="${p.patientId}">${p.name}</option>`).join('');
+        }
+      }
+    }
 
-function openGenerateModal() {
-  document.getElementById('bill-amount').value = '';
-  document.getElementById('bill-desc').value   = '';
-  openModal('bill-modal');
-}
+    function openGenerateModal() {
+      document.getElementById('bill-amount').value = '';
+      document.getElementById('bill-desc').value = '';
+      openModal('bill-modal');
+    }
 
-async function generateBill() {
-  const patientId = document.getElementById('bill-patient').value;
-  const amount    = document.getElementById('bill-amount').value;
-  if (!patientId || !amount) { toast('Patient and amount are required', 'error'); return; }
-  const btn = document.getElementById('bill-save-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
-  const res = await API.bills.generate({ patientId: parseInt(patientId), totalAmount: parseFloat(amount) });
-  btn.disabled = false; btn.textContent = 'Generate';
-  if (res.success) { toast('Bill generated!', 'success'); closeModal('bill-modal'); loadBills(); }
-  else toast(res.message, 'error');
-}
+    async function generateBill() {
+      const user = getSession();
+      const patientId = user.role === 'ADMIN'
+        ? document.getElementById('bill-patient').value
+        : user.patientId;
+      const amount = document.getElementById('bill-amount').value;
+      if (!patientId || !amount) { toast('Patient and amount are required', 'error'); return; }
+      const btn = document.getElementById('bill-save-btn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+      const res = await API.bills.generate({ patientId: parseInt(patientId), totalAmount: parseFloat(amount) });
+      btn.disabled = false; btn.textContent = 'Generate';
+      if (res.success) { toast('Bill generated!', 'success'); closeModal('bill-modal'); loadBills(); }
+      else toast(res.message, 'error');
+    }
 
-function viewInvoice(id) {
-  const b = bills.find(x => x.billId === id);
-  if (!b) return;
-  document.getElementById('invoice-body').innerHTML = `
+    function viewInvoice(id) {
+      const b = bills.find(x => x.billId === id);
+      if (!b) return;
+      document.getElementById('invoice-body').innerHTML = `
     <div style="border:2px solid var(--border);border-radius:10px;padding:20px;background:var(--bg-secondary)">
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:1.5rem">🏥</div>
@@ -226,28 +280,29 @@ function viewInvoice(id) {
       <div style="margin-top:12px;text-align:center">${statusBadge(b.paymentStatus)}</div>
     </div>`;
 
-  const payBtn = document.getElementById('invoice-pay-btn');
-  if (b.paymentStatus === 'PAID') {
-    payBtn.style.display = 'none';
-  } else {
-    payBtn.style.display = '';
-    payBtn.onclick = async () => { await payBill(id); closeModal('invoice-modal'); };
-  }
-  openModal('invoice-modal');
-}
+      const payBtn = document.getElementById('invoice-pay-btn');
+      if (b.paymentStatus === 'PAID') {
+        payBtn.style.display = 'none';
+      } else {
+        payBtn.style.display = '';
+        payBtn.onclick = async () => { await payBill(id); closeModal('invoice-modal'); };
+      }
+      openModal('invoice-modal');
+    }
 
-async function payBill(id) {
-  const res = await API.bills.pay(id);
-  if (res.success) { toast('Payment recorded!', 'success'); loadBills(); }
-  else toast(res.message, 'error');
-}
+    async function payBill(id) {
+      const res = await API.bills.pay(id);
+      if (res.success) { toast('Payment recorded!', 'success'); loadBills(); }
+      else toast(res.message, 'error');
+    }
 
-async function deleteBill(id) {
-  if (!confirm('Delete this bill?')) return;
-  const res = await API.bills.delete(id);
-  if (res.success) { toast('Bill deleted', 'success'); loadBills(); }
-  else toast(res.message, 'error');
-}
-</script>
+    async function deleteBill(id) {
+      if (!confirm('Delete this bill?')) return;
+      const res = await API.bills.delete(id);
+      if (res.success) { toast('Bill deleted', 'success'); loadBills(); }
+      else toast(res.message, 'error');
+    }
+  </script>
 </body>
+
 </html>

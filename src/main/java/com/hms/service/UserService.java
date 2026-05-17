@@ -1,9 +1,11 @@
 package com.hms.service;
 
-import com.hms.dao.UserDao;
 import com.hms.dao.DoctorDao;
-import com.hms.model.User;
+import com.hms.dao.PatientDao;
+import com.hms.dao.UserDao;
 import com.hms.model.Doctor;
+import com.hms.model.Patient;
+import com.hms.model.User;
 import com.hms.util.PasswordUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,9 @@ public class UserService {
     @Autowired
     private DoctorDao doctorDao;
 
+    @Autowired
+    private PatientDao patientDao;
+
     public User register(User user) {
         if (userDao.findByUsername(user.getUsername()).isPresent())
             throw new IllegalArgumentException("Username already exists: " + user.getUsername());
@@ -35,11 +40,19 @@ public class UserService {
         User savedUser = userDao.save(user);
 
         // If registering as DOCTOR, auto-create a Doctor record linked to this user
-        if (user.getRole() == User.Role.DOCTOR) {
+        if (savedUser.getRole() == User.Role.DOCTOR) {
             Doctor doctor = new Doctor();
             doctor.setUser(savedUser);
             doctor.setName(savedUser.getUsername()); // Default to username, can be updated later
             doctorDao.save(doctor);
+        }
+
+        // If registering as PATIENT, auto-create a Patient record linked to this user
+        if (savedUser.getRole() == User.Role.PATIENT) {
+            Patient patient = new Patient();
+            patient.setUser(savedUser);
+            patient.setName(savedUser.getUsername());
+            patientDao.save(patient);
         }
 
         return savedUser;
@@ -68,7 +81,26 @@ public class UserService {
     public User approveUser(int id) {
         User user = getUser(id);
         user.setApproved(true);
-        return userDao.update(user);
+        User approvedUser = userDao.update(user);
+        if (approvedUser.getRole() == User.Role.DOCTOR) {
+            doctorDao.findByUserId(approvedUser.getUserId())
+                    .orElseGet(() -> {
+                        Doctor doctor = new Doctor();
+                        doctor.setUser(approvedUser);
+                        doctor.setName(approvedUser.getUsername());
+                        return doctorDao.save(doctor);
+                    });
+        }
+        if (approvedUser.getRole() == User.Role.PATIENT) {
+            patientDao.findByUserId(approvedUser.getUserId())
+                    .orElseGet(() -> {
+                        Patient patient = new Patient();
+                        patient.setUser(approvedUser);
+                        patient.setName(approvedUser.getUsername());
+                        return patientDao.save(patient);
+                    });
+        }
+        return approvedUser;
     }
 
     public User getUser(int id) {

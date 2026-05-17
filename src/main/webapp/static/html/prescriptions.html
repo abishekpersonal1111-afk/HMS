@@ -172,13 +172,19 @@
     }
 
     async function populateDropdowns() {
-      const [pts, docs] = await Promise.all([API.patients.getAll(), API.doctors.getAll()]);
-      if (pts.success)
-        document.getElementById('rx-patient').innerHTML = '<option value="">Select…</option>' +
-          (pts.data || []).map(p => `<option value="${p.patientId}">${p.name}</option>`).join('');
-      if (docs.success)
+      const user = getSession();
+      const res = await API.doctors.getAll();
+      if (res.success)
         document.getElementById('rx-doctor').innerHTML = '<option value="">Select…</option>' +
-          (docs.data || []).map(d => `<option value="${d.doctorId}">${d.name}</option>`).join('');
+          (res.data || []).map(d => `<option value="${d.doctorId}">${d.name}</option>`).join('');
+
+      // Only show patient dropdown for admins; doctors and patients see themselves
+      if (user.role === 'ADMIN') {
+        const pts = await API.patients.getAll();
+        if (pts.success)
+          document.getElementById('rx-patient').innerHTML = '<option value="">Select…</option>' +
+            (pts.data || []).map(p => `<option value="${p.patientId}">${p.name}</option>`).join('');
+      }
     }
 
     function openNew() {
@@ -230,9 +236,15 @@
     }
 
     async function savePrescription() {
-      const patientId = document.getElementById('rx-patient').value;
-      const doctorId = document.getElementById('rx-doctor').value;
+      const user = getSession();
+      const patientId = user.role === 'ADMIN'
+        ? document.getElementById('rx-patient').value
+        : user.patientId;
+      const doctorId = user.role === 'DOCTOR'
+        ? user.doctorId
+        : document.getElementById('rx-doctor').value;
       const diagnosis = document.getElementById('rx-diagnosis').value.trim();
+
       if (!patientId || !doctorId) { toast('Patient and doctor are required', 'error'); return; }
 
       const medRows = document.querySelectorAll('#medicines-list > div');

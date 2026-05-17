@@ -23,11 +23,15 @@ public class AuthController {
             User user = userService.login(body.get("username"), body.get("password"));
             // store safe copy (no password) in session
             session.setAttribute("currentUser", user);
-            return ResponseEntity.ok(ApiResponse.ok("Login successful", Map.of(
-                    "userId",   user.getUserId(),
+            var payload = new java.util.HashMap<String, Object>(Map.of(
+                    "userId", user.getUserId(),
                     "username", user.getUsername(),
-                    "role",     user.getRole().name()
-            )));
+                    "role", user.getRole().name()));
+            if (user.getPatient() != null)
+                payload.put("patientId", user.getPatient().getPatientId());
+            if (user.getDoctor() != null)
+                payload.put("doctorId", user.getDoctor().getDoctorId());
+            return ResponseEntity.ok(ApiResponse.ok("Login successful", payload));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(ApiResponse.error(e.getMessage()));
         }
@@ -53,11 +57,16 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> me(HttpSession session) {
         User user = (User) session.getAttribute("currentUser");
-        if (user == null) return ResponseEntity.status(401).body(ApiResponse.error("Not logged in"));
-        return ResponseEntity.ok(ApiResponse.ok(Map.of(
-                "userId",   user.getUserId(),
+        if (user == null)
+            return ResponseEntity.status(401).body(ApiResponse.error("Not logged in"));
+        var payload = new java.util.HashMap<String, Object>(Map.of(
+                "userId", user.getUserId(),
                 "username", user.getUsername(),
-                "role",     user.getRole().name()
-        )));
+                "role", user.getRole().name()));
+        if (user.getPatient() != null)
+            payload.put("patientId", user.getPatient().getPatientId());
+        if (user.getDoctor() != null)
+            payload.put("doctorId", user.getDoctor().getDoctorId());
+        return ResponseEntity.ok(ApiResponse.ok(payload));
     }
 }

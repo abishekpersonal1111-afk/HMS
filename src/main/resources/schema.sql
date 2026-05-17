@@ -9,12 +9,23 @@ USE hms;
 -- ─── Patient ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS Patient (
     patientId       INT PRIMARY KEY AUTO_INCREMENT,
+    userId          INT UNIQUE,
     name            VARCHAR(100)  NOT NULL,
     dateOfBirth     DATE,
     gender          VARCHAR(10),
     contactNumber   VARCHAR(15),
     address         VARCHAR(255),
-    medicalHistory  TEXT
+    medicalHistory  TEXT,
+    FOREIGN KEY (userId) REFERENCES User(userId) ON DELETE CASCADE
+);
+
+-- ─── User (RBAC) ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS User (
+    userId    INT PRIMARY KEY AUTO_INCREMENT,
+    username  VARCHAR(50)  UNIQUE NOT NULL,
+    password  VARCHAR(255) NOT NULL,
+    role      ENUM('ADMIN','PATIENT','DOCTOR') NOT NULL DEFAULT 'PATIENT',
+    approved  BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- ─── Doctor ──────────────────────────────────────────────────
@@ -25,15 +36,7 @@ CREATE TABLE IF NOT EXISTS Doctor (
     specialization        VARCHAR(100),
     contactNumber         VARCHAR(15),
     availabilitySchedule  TEXT,
-    FOREIGN KEY (userId) REFERENCES User(userId) ON DELETE SET NULL
-);
-
--- ─── User (RBAC) ─────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS User (
-    userId    INT PRIMARY KEY AUTO_INCREMENT,
-    username  VARCHAR(50)  UNIQUE NOT NULL,
-    password  VARCHAR(255) NOT NULL,
-    role      ENUM('ADMIN','PATIENT','DOCTOR') NOT NULL DEFAULT 'PATIENT'
+    FOREIGN KEY (userId) REFERENCES User(userId) ON DELETE CASCADE
 );
 
 -- ─── Appointment ─────────────────────────────────────────────

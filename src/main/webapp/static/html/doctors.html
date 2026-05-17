@@ -128,12 +128,15 @@
       const colors = ['blue', 'green', 'amber', 'purple', 'red'];
       grid.innerHTML = data.map((d, i) => `
     <div class="card" style="position:relative">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-        <div class="stat-icon ${colors[i % colors.length]}" style="width:52px;height:52px;font-size:1.6rem;flex-shrink:0">👨‍⚕️</div>
-        <div>
-          <div style="font-weight:700;font-size:1rem">${d.name}</div>
-          <span class="badge badge-blue">${d.specialization || 'General'}</span>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:14px;flex:1">
+          <div class="stat-icon ${colors[i % colors.length]}" style="width:52px;height:52px;font-size:1.6rem;flex-shrink:0">👨‍⚕️</div>
+          <div>
+            <div style="font-weight:700;font-size:1rem">${d.name}</div>
+            <span class="badge badge-blue">${d.specialization || 'General'}</span>
+          </div>
         </div>
+        <span class="badge ${d.user ? 'badge-green' : 'badge-amber'}" style="flex-shrink:0;white-space:nowrap">${d.user ? '👤 Registered' : '✏️ Manual'}</span>
       </div>
       <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:6px">📞 ${d.contactNumber || '—'}</div>
       <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:16px">🗓 ${d.availabilitySchedule || '—'}</div>

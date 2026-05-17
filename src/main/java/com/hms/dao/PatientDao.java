@@ -31,6 +31,13 @@ public class PatientDao implements GenericDao<Patient, Integer> {
                 .getResultList();
     }
 
+    public Optional<Patient> findByUserId(Integer userId) {
+        return entityManager.createQuery("FROM Patient WHERE user.userId = :uid", Patient.class)
+                .setParameter("uid", userId)
+                .getResultStream()
+                .findFirst();
+    }
+
     @Override
     public Patient update(Patient p) {
         return entityManager.merge(p);
@@ -39,11 +46,13 @@ public class PatientDao implements GenericDao<Patient, Integer> {
     @Override
     public void delete(Integer id) {
         Patient p = entityManager.find(Patient.class, id);
-        if (p != null) entityManager.remove(p);
+        if (p != null)
+            entityManager.remove(p);
     }
 
     public List<Patient> search(String keyword) {
-        return entityManager.createQuery("FROM Patient WHERE LOWER(name) LIKE :kw OR contactNumber LIKE :kw", Patient.class)
+        return entityManager
+                .createQuery("FROM Patient WHERE LOWER(name) LIKE :kw OR contactNumber LIKE :kw", Patient.class)
                 .setParameter("kw", "%" + keyword.toLowerCase() + "%")
                 .getResultList();
     }

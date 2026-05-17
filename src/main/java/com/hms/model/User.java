@@ -19,7 +19,7 @@ public class User {
     private String username;
 
     @Column(nullable = false, length = 255)
-    private String password;    // BCrypt hashed
+    private String password; // BCrypt hashed
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -27,6 +27,12 @@ public class User {
 
     @Column(nullable = false)
     private boolean approved = false;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private Patient patient;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private Doctor doctor;
 
     public enum Role {
         ADMIN, PATIENT, DOCTOR

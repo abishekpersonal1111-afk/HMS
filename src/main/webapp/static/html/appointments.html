@@ -144,6 +144,7 @@
     })();
 
     async function loadAppointments() {
+      const user = getSession();
       const res = await API.appointments.getAll();
       if (!res.success) { toast(res.message, 'error'); return; }
       appointments = res.data || [];
@@ -199,18 +200,16 @@
     }
 
     async function saveAppointment() {
-      const patientId = document.getElementById('apt-patient').value;
       const doctorId = document.getElementById('apt-doctor').value;
       const date = document.getElementById('apt-date').value;
       const timeSlot = document.getElementById('apt-slot').value;
 
-      if (!patientId || !doctorId || !date) { toast('Please fill all required fields', 'error'); return; }
+      if (!doctorId || !date) { toast('Please fill all required fields', 'error'); return; }
 
       const btn = document.getElementById('apt-save-btn');
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
 
       const res = await API.appointments.schedule({
-        patientId: parseInt(patientId),
         doctorId: parseInt(doctorId),
         appointmentDate: date,
         timeSlot
