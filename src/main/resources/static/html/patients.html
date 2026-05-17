@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HMS – Patients</title>
+  <link rel="stylesheet" href="../css/styles.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon">🏥</div><div><span>MediCore HMS</span></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">📊</span>Dashboard</a>
+      <div class="nav-section-label">Management</div>
+      <a class="nav-item" data-page="patients" href="patients.html"><span class="nav-icon">🧑‍⚕️</span>Patients</a>
+      <a class="nav-item" data-page="doctors" href="doctors.html"><span class="nav-icon">👨‍⚕️</span>Doctors</a>
+      <a class="nav-item" data-page="appointments" href="appointments.html"><span class="nav-icon">📅</span>Appointments</a>
+      <a class="nav-item" data-page="billing" href="billing.html"><span class="nav-icon">💳</span>Billing</a>
+      <a class="nav-item" data-page="prescriptions" href="prescriptions.html"><span class="nav-icon">💊</span>Prescriptions</a>
+      <div class="nav-section-label" data-role="ADMIN">System</div>
+      <a class="nav-item" data-page="users" data-role="ADMIN" href="users.html"><span class="nav-icon">👥</span>Users</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar" id="sidebar-avatar">A</div>
+        <div class="user-info"><strong id="sidebar-username">…</strong><span id="sidebar-role">—</span></div>
+        <button class="btn-logout" onclick="logout()">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <span class="topbar-title">Patient Management</span>
+      <div class="topbar-actions">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input id="search-input" type="text" placeholder="Search patients…" oninput="debounceSearch(this.value)"/>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('patient-modal')">➕ Add Patient</button>
+      </div>
+    </header>
+
+    <main class="page-content fade-in">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Name</th><th>Date of Birth</th><th>Gender</th>
+              <th>Contact</th><th>Address</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="patients-tbody"><tr><td colspan="7" style="text-align:center;padding:40px"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add/Edit Patient Modal -->
+<div class="modal-overlay" id="patient-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Add Patient</h3>
+      <button class="modal-close" onclick="closeModal('patient-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="p-id"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input id="p-name" class="form-control" type="text" placeholder="Patient full name" required/>
+        </div>
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input id="p-dob" class="form-control" type="date"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="p-gender" class="form-control">
+            <option value="">Select…</option>
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Contact Number</label>
+          <input id="p-contact" class="form-control" type="tel" placeholder="10-digit number"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input id="p-address" class="form-control" type="text" placeholder="Full address"/>
+      </div>
+      <div class="form-group">
+        <label>Medical History</label>
+        <textarea id="p-history" class="form-control" placeholder="Known conditions, allergies, etc."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('patient-modal')">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="savePatient()">Save Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Patient Modal -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Patient Details</h3>
+      <button class="modal-close" onclick="closeModal('view-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="view-body"></div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/app.js"></script>
+<script>
+let patients = [];
+let searchTimer = null;
+
+(async () => {
+  await requireAuth();
+  initSidebar('patients');
+  loadPatients();
+})();
+
+async function loadPatients(search = '') {
+  const res = await API.patients.getAll(search);
+  if (!res.success) { toast(res.message, 'error'); return; }
+  patients = res.data || [];
+  renderTable(patients);
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('patients-tbody');
+  if (!data.length) { tbody.innerHTML = emptyRow(7, 'No patients found'); return; }
+  tbody.innerHTML = data.map((p, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${fmtDate(p.dateOfBirth)}</td>
+      <td>${p.gender || '—'}</td>
+      <td>${p.contactNumber || '—'}</td>
+      <td>${p.address || '—'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="viewPatient(${p.patientId})">👁 View</button>
+          <button class="btn btn-primary btn-sm" onclick="editPatient(${p.patientId})">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePatient(${p.patientId})">🗑</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function debounceSearch(val) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadPatients(val), 400);
+}
+
+function openAddModal() {
+  clearForm();
+  document.getElementById('modal-title').textContent = 'Add Patient';
+  openModal('patient-modal');
+}
+
+function clearForm() {
+  ['p-id','p-name','p-dob','p-gender','p-contact','p-address','p-history']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+}
+
+function editPatient(id) {
+  const p = patients.find(x => x.patientId === id);
+  if (!p) return;
+  document.getElementById('modal-title').textContent = 'Edit Patient';
+  document.getElementById('p-id').value      = p.patientId;
+  document.getElementById('p-name').value    = p.name || '';
+  document.getElementById('p-dob').value     = p.dateOfBirth || '';
+  document.getElementById('p-gender').value  = p.gender || '';
+  document.getElementById('p-contact').value = p.contactNumber || '';
+  document.getElementById('p-address').value = p.address || '';
+  document.getElementById('p-history').value = p.medicalHistory || '';
+  openModal('patient-modal');
+}
+
+function viewPatient(id) {
+  const p = patients.find(x => x.patientId === id);
+  if (!p) return;
+  document.getElementById('view-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><div style="font-size:.75rem;color:var(--text-secondary)">Name</div><div style="font-weight:600">${p.name}</div></div>
+      <div><div style="font-size:.75rem;color:var(--text-secondary)">Date of Birth</div><div>${fmtDate(p.dateOfBirth)}</div></div>
+      <div><div style="font-size:.75rem;color:var(--text-secondary)">Gender</div><div>${p.gender || '—'}</div></div>
+      <div><div style="font-size:.75rem;color:var(--text-secondary)">Contact</div><div>${p.contactNumber || '—'}</div></div>
+      <div style="grid-column:1/-1"><div style="font-size:.75rem;color:var(--text-secondary)">Address</div><div>${p.address || '—'}</div></div>
+      <div style="grid-column:1/-1"><div style="font-size:.75rem;color:var(--text-secondary)">Medical History</div>
+        <div style="background:var(--bg-secondary);border-radius:8px;padding:10px;margin-top:4px;font-size:.85rem;white-space:pre-wrap">${p.medicalHistory || 'None recorded'}</div>
+      </div>
+    </div>`;
+  openModal('view-modal');
+}
+
+async function savePatient() {
+  const id = document.getElementById('p-id').value;
+  const data = {
+    name:          document.getElementById('p-name').value.trim(),
+    dateOfBirth:   document.getElementById('p-dob').value   || null,
+    gender:        document.getElementById('p-gender').value || null,
+    contactNumber: document.getElementById('p-contact').value|| null,
+    address:       document.getElementById('p-address').value|| null,
+    medicalHistory:document.getElementById('p-history').value|| null,
+  };
+  if (!data.name) { toast('Patient name is required', 'error'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  const res = id ? await API.patients.update(id, data) : await API.patients.create(data);
+  btn.disabled = false; btn.innerHTML = 'Save Patient';
+  if (res.success) {
+    toast(res.message, 'success');
+    closeModal('patient-modal');
+    loadPatients();
+  } else toast(res.message, 'error');
+}
+
+async function deletePatient(id) {
+  if (!confirm('Delete this patient? This cannot be undone.')) return;
+  const res = await API.patients.delete(id);
+  if (res.success) { toast('Patient deleted', 'success'); loadPatients(); }
+  else toast(res.message, 'error');
+}
+</script>
+</body>
+</html>

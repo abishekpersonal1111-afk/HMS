@@ -33,7 +33,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable int id) {
+    public ResponseEntity<?> getById(@PathVariable("id") int id) {
         try {
             return ResponseEntity.ok(ApiResponse.ok(appointmentService.getDetails(id)));
         } catch (Exception e) {
@@ -59,7 +59,7 @@ public class AppointmentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable int id, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> update(@PathVariable("id") int id, @RequestBody Map<String, Object> body) {
         try {
             Appointment a = appointmentService.getDetails(id);
             if (body.containsKey("appointmentDate"))
@@ -74,7 +74,7 @@ public class AppointmentController {
     }
 
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<?> cancel(@PathVariable int id) {
+    public ResponseEntity<?> cancel(@PathVariable("id") int id) {
         try {
             return ResponseEntity.ok(ApiResponse.ok("Appointment cancelled", appointmentService.cancel(id)));
         } catch (Exception e) {

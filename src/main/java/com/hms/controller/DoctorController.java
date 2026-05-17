@@ -27,7 +27,7 @@ public class DoctorController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable int id) {
+    public ResponseEntity<?> getById(@PathVariable("id") int id) {
         try {
             return ResponseEntity.ok(ApiResponse.ok(doctorService.getDoctorDetails(id)));
         } catch (Exception e) {
@@ -45,7 +45,7 @@ public class DoctorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateDoctor(@PathVariable int id, @RequestBody Doctor doctor) {
+    public ResponseEntity<?> updateDoctor(@PathVariable("id") int id, @RequestBody Doctor doctor) {
         try {
             doctor.setDoctorId(id);
             return ResponseEntity.ok(ApiResponse.ok("Doctor updated", doctorService.updateDoctor(doctor)));
@@ -55,7 +55,7 @@ public class DoctorController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteDoctor(@PathVariable int id) {
+    public ResponseEntity<?> deleteDoctor(@PathVariable("id") int id) {
         try {
             doctorService.deleteDoctor(id);
             return ResponseEntity.ok(ApiResponse.ok("Doctor deleted", null));

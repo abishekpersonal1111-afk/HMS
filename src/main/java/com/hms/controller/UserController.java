@@ -24,7 +24,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable int id) {
+    public ResponseEntity<?> getById(@PathVariable("id") int id) {
         try {
             return ResponseEntity.ok(ApiResponse.ok(userService.getUser(id)));
         } catch (Exception e) {
@@ -33,7 +33,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable int id, @RequestBody User user) {
+    public ResponseEntity<?> update(@PathVariable("id") int id, @RequestBody User user) {
         try {
             user.setUserId(id);
             return ResponseEntity.ok(ApiResponse.ok("User updated", userService.updateUser(user)));
@@ -42,8 +42,26 @@ public class UserController {
         }
     }
 
+    @GetMapping("/pending")
+    public ResponseEntity<?> getPending() {
+        try {
+            return ResponseEntity.ok(ApiResponse.ok(userService.getPendingUsers()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<?> approve(@PathVariable("id") int id) {
+        try {
+            return ResponseEntity.ok(ApiResponse.ok("User approved", userService.approveUser(id)));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable int id) {
+    public ResponseEntity<?> delete(@PathVariable("id") int id) {
         try {
             userService.deleteUser(id);
             return ResponseEntity.ok(ApiResponse.ok("User deleted", null));

@@ -25,6 +25,9 @@ public class User {
     @Column(nullable = false)
     private Role role = Role.PATIENT;
 
+    @Column(nullable = false)
+    private boolean approved = false;
+
     public enum Role {
         ADMIN, PATIENT, DOCTOR
     }

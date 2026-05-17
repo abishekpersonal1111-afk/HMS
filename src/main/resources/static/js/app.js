@@ -63,7 +63,7 @@ function clearSession() {
 async function requireAuth() {
   const res = await API.auth.me();
   if (!res.success) {
-    window.location.href = "/hms/static/html/login.html";
+    window.location.href = "/hms/html/login.html";
     return null;
   }
   setSession(res.data);
@@ -137,7 +137,7 @@ function initSidebar(activeId) {
 
     const currentPage = getCurrentPage();
     if (!isPageAllowed(user, currentPage)) {
-      window.location.href = "/hms/static/html/dashboard.html";
+      window.location.href = "/hms/html/dashboard.html";
       return;
     }
   }
@@ -147,7 +147,7 @@ function initSidebar(activeId) {
 async function logout() {
   await API.auth.logout();
   clearSession();
-  window.location.href = "/hms/static/html/login.html";
+  window.location.href = "/hms/html/login.html";
 }
 
 // ─── Format helpers ───────────────────────────────────────────

@@ -15,6 +15,10 @@ public class Doctor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer doctorId;
 
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "userId")
+    private User user;
+
     @Column(nullable = false, length = 100)
     private String name;
 

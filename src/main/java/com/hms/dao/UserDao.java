@@ -1,10 +1,9 @@
 package com.hms.dao;
 
 import com.hms.model.User;
-import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,42 +11,42 @@ import java.util.Optional;
 @Repository
 public class UserDao implements GenericDao<User, Integer> {
 
-    @Autowired
-    private SessionFactory sessionFactory;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     public User save(User u) {
-        sessionFactory.getCurrentSession().persist(u);
+        entityManager.persist(u);
         return u;
     }
 
     @Override
     public Optional<User> findById(Integer id) {
-        return Optional.ofNullable(sessionFactory.getCurrentSession().get(User.class, id));
+        return Optional.ofNullable(entityManager.find(User.class, id));
     }
 
     @Override
     public List<User> findAll() {
-        return sessionFactory.getCurrentSession()
-                .createQuery("FROM User ORDER BY username", User.class)
+        return entityManager.createQuery("FROM User ORDER BY username", User.class)
                 .getResultList();
     }
 
     @Override
     public User update(User u) {
-        return (User) sessionFactory.getCurrentSession().merge(u);
+        return entityManager.merge(u);
     }
 
     @Override
     public void delete(Integer id) {
-        User u = sessionFactory.getCurrentSession().get(User.class, id);
-        if (u != null) sessionFactory.getCurrentSession().remove(u);
+        User u = entityManager.find(User.class, id);
+        if (u != null) entityManager.remove(u);
     }
 
     public Optional<User> findByUsername(String username) {
-        return sessionFactory.getCurrentSession()
-                .createQuery("FROM User WHERE username = :un", User.class)
+        List<User> list = entityManager.createQuery("FROM User WHERE username = :un", User.class)
                 .setParameter("un", username)
-                .uniqueResultOptional();
+                .getResultList();
+        return list.stream().findFirst();
     }
 }
+

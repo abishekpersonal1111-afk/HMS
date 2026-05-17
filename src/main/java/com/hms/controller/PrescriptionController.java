@@ -36,7 +36,7 @@ public class PrescriptionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable int id) {
+    public ResponseEntity<?> getById(@PathVariable("id") int id) {
         try {
             return ResponseEntity.ok(ApiResponse.ok(prescriptionService.getById(id)));
         } catch (Exception e) {
@@ -75,7 +75,7 @@ public class PrescriptionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable int id) {
+    public ResponseEntity<?> delete(@PathVariable("id") int id) {
         try {
             prescriptionService.delete(id);
             return ResponseEntity.ok(ApiResponse.ok("Prescription deleted", null));

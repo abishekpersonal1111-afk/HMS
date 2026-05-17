@@ -20,10 +20,12 @@ CREATE TABLE IF NOT EXISTS Patient (
 -- ─── Doctor ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS Doctor (
     doctorId              INT PRIMARY KEY AUTO_INCREMENT,
+    userId                INT,
     name                  VARCHAR(100)  NOT NULL,
     specialization        VARCHAR(100),
     contactNumber         VARCHAR(15),
-    availabilitySchedule  TEXT
+    availabilitySchedule  TEXT,
+    FOREIGN KEY (userId) REFERENCES User(userId) ON DELETE SET NULL
 );
 
 -- ─── User (RBAC) ─────────────────────────────────────────────

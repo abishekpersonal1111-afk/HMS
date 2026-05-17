@@ -32,7 +32,7 @@ public class BillingController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable int id) {
+    public ResponseEntity<?> getById(@PathVariable("id") int id) {
         try {
             return ResponseEntity.ok(ApiResponse.ok(billingService.getBill(id)));
         } catch (Exception e) {
@@ -56,7 +56,7 @@ public class BillingController {
     }
 
     @PatchMapping("/{id}/pay")
-    public ResponseEntity<?> pay(@PathVariable int id) {
+    public ResponseEntity<?> pay(@PathVariable("id") int id) {
         try {
             return ResponseEntity.ok(ApiResponse.ok("Payment processed", billingService.processPayment(id)));
         } catch (Exception e) {
@@ -65,7 +65,7 @@ public class BillingController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable int id) {
+    public ResponseEntity<?> delete(@PathVariable("id") int id) {
         try {
             billingService.deleteBill(id);
             return ResponseEntity.ok(ApiResponse.ok("Bill deleted", null));
